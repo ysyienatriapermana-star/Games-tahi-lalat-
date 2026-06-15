@@ -1,20 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <meta charset=UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>tahi lalat klik</title>
-  <link rel="stylesheet" href="jojo.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Panel - Perfect Responsive Layout</title>
+  <style>
+    /* Reset & Kunci Semua Elemen Agar Tidak Melebihi Kotaknya */
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0;
+    }
+    
+    body { 
+      font-family: Arial, sans-serif; 
+      background:#111; 
+      color:#eee; 
+      padding: 15px; 
+      display: flex;
+      flex-direction: column;
+      align-items: center; /* Membuat semua konten berada di tengah-tengah layar laptop */
+      min-height: 100vh;
+      overflow-x: hidden; /* Anti geser kanan-kiri */
+    }
+    
+    /* ==== HALAMAN LOGIN (Sama seperti sebelumnya) ==== */
+    .login-container {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #111; display: flex; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+    }
+    .login-box {
+      background: #222; padding: 25px; border-radius: 12px;
+      width: 100%; max-width: 360px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    /* ==== WADAH UTAMA APLIKASI (Kunci agar tidak luber di laptop) ==== */
+    .main-app { 
+      display: none; 
+      width: 100%;
+      max-width: 411px; /* Dikunci sama persis dengan lebar gambar bunga */
+      margin: 0 auto;
+    }
+    
+    /* Box Info Saldo (Sekarang pas, tidak akan melebar sembarangan) */
+    .uang { 
+      background:#222; 
+      padding:15px; 
+      border-radius:8px; 
+      margin-bottom:15px; 
+      width: 100%; /* Mengikuti wadah main-app (maksimal 411px) */
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    
+    /* Wadah Area Gambar & Tompel */
+    .jojo { 
+      text-align:center; 
+      position:relative; 
+      display: block;
+      width: 100%; 
+      max-width: 411px;
+    }
+    
+    /* Gambar Bunga Responsif */
+    .jojo img {
+      width: 100%;       
+      max-width: 411px;  
+      height: auto;      
+      display: block;
+      border-radius: 8px;
+    }
+    
+    /* Tompel Responsif Tetap di Tengah Bunga */
+    .tompel { 
+      width:24px; 
+      height:24px; 
+      background:rgba(0); 
+      border-radius:50%; 
+      position:absolute; 
+      top: 204px;          
+      left: 226px; 
+      transform: translate(-50%, -50%); 
+      cursor:pointer; 
+      transition: 0.2s;
+      z-index: 2;
+    }
+    .tompel.active { transform: translate(-50%, -50%) scale(1.3); }
+    .tompel.berdarah { background: red; box-shadow: 0 0 15px red; }
+    
+    /* ==== MODAL TOP UP RESPONSIF ==== */
+    .modal { 
+      display:none; 
+      position:fixed; top:0; left:0; width:100%; height:100%; 
+      background:rgba(0,0,0,0.8); z-index: 10; padding: 20px; 
+    }
+    .modal.show { display:flex; align-items:center; justify-content:center; }
+    .modal-content { 
+      background:#222; padding:20px; border-radius:10px; 
+      width: 100%; 
+      max-width: 380px; /* Batasi lebar box dalam modal agar tidak luber */
+      position:relative; 
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    }
+    .close { position:absolute; right:15px; top:10px; cursor:pointer; font-size:20px; color:#aaa; }
+    
+    /* Komponen Input & Tombol */
+    input, button { width:100%; padding:12px; margin-top:10px; border-radius:6px; border:none; font-size: 15px; }
+    input { background: #333; color: white; }
+    button { background:#0af; color:white; font-weight:bold; cursor:pointer; }
+    button:hover { opacity: 0.9; }
+    
+    /* Toast Notifikasi */
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; padding:10px 20px; border-radius:6px; display:none; z-index:99; width: 90%; max-width: 300px; text-align: center; }
+    .toast.show { display:block; }
+  </style>
 </head>
 <body>
- <div class="uang">
-  Saldo: Rp <span id="saldo">0</span> <button id="btnTopUp" style="width:auto; padding:2px 10px; margin:0">+</button><br>
-  Hutang: Rp <span id="hutang">0</span>
+
+ <div id="loginPage" class="login-container">
+   <div class="login-box">
+     <h2 style="margin-bottom:10px;">Masuk Aplikasi</h2>
+     <p style="color: #aaa; font-size: 14px; margin-bottom:15px;">Masukkan ID Pengguna / Nomor HP yang terdaftar di Admin</p>
+     <input type="text" id="loginIdInput" placeholder="Masukkan ID Kamu (Contoh: 0858xxx)">
+     <button id="btnDaftar" style="background:#25D366; margin-top:15px">
+      daftar melalui whatsaap
+    </button>
+     <button id="btnLogin" style="background: #25D366; margin-top: 15px;">Masuk Sekarang</button>
+   </div>
  </div>
 
- <div class="jojo">
-  <div class="tompel"></div>
-  <img src="bunga.png" width="411" alt="Bunga">
+ <div id="mainApp" class="main-app">
+   <div class="uang">
+    <button id="btnLogout" style="width:auto; padding:4px 10px; background:red; margin:0; float:right; font-size:12px;">Logout</button>
+    ID: <b id="displayUserId" style="color: #0af;">-</b> 
+    <div style="clear:both;"></div>
+    
+    <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
+    
+    Saldo: Rp <span id="saldo">0</span> <button id="btnTopUp" style="width:auto; padding:4px 12px; margin:0; display:inline-block; margin-left:10px;">+</button><br>
+    Hutang: Rp <span id="hutang">0</span>
+   </div>
+
+   <div class="jojo">
+    <div class="tompel"></div>
+    <img src="bunga.png" alt="Bunga">
+   </div>
  </div>
 
  <div id="toast" class="toast"></div>
@@ -22,15 +152,14 @@
  <div id="topUpModal" class="modal">
   <div class="modal-content">
     <span class="close">&times;</span>
-    <h3>Top Up Saldo</h3>
-    <input type="number" id="inputNominal" placeholder="Masukkan nominal">
-    <input type="text" id="inputKode" placeholder="Masukkan kode dari admin" style="margin-top:8px">
+    <h3 style="margin-bottom: 5px;">Top Up Saldo</h3>
+    <input type="number" id="inputNominal" placeholder="Masukkan nominal top up">
+    <input type="text" id="inputKode" placeholder="Masukkan kode voucher dari admin">
     
-    <button id="btnMintaKode" style="background:#25D366; margin-top:10px">
-      📱 beli kode ke Admin via WA
+    <button id="btnMintaKode" style="background:#25D366; margin-top:15px">
+      📱 Minta Kode ke Admin via WA
     </button>
-    
-    <button id="btnBayar" style="background:#25D366; margin-top:10px">Bayar</button>
+    <button id="btnBayar" style="margin-top:10px">Verifikasi &amp; Bayar</button>
   </div>
 </div>
 
@@ -39,7 +168,6 @@
 
 <script>
 // ⚠️ GANTI DENGAN KONFIGURASI FIREBASE ANDA SENDIRI
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDasO8TzkeiWOPoa-3U3yzdprkYGogf9nk",
   authDomain: "my-project-8f3a3.firebaseapp.com",
@@ -54,27 +182,63 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+let userId = localStorage.getItem('app_user_id');
 let saldo = 0;
 let hutang = 0;
+let isUserValid = false;
+
 const saldoSpan = document.getElementById('saldo');
 const hutangSpan = document.getElementById('hutang');
 const tompel = document.querySelector('.tompel');
 const toast = document.getElementById('toast');
-
 let udahToastBerdarah = false;
 
-// Ambil data Saldo & Hutang user dari Firebase secara real-time
-db.ref('userData').on('value', (snapshot) => {
-  const data = snapshot.val() || { saldo: 0, hutang: 0 };
-  saldo = data.saldo;
-  hutang = data.hutang;
-  updateUI();
-});
+window.onload = () => {
+  if (userId) { verifikasiID(userId); }
+};
+
+document.getElementById('btnLogin').onclick = () => {
+  let inputId = document.getElementById('loginIdInput').value.trim().toUpperCase();
+  if (!inputId) { alert("ID Pengguna tidak boleh kosong!"); return; }
+  verifikasiID(inputId);
+};
+
+function verifikasiID(targetId) {
+  db.ref('users/' + targetId).once('value', (snapshot) => {
+    if (snapshot.exists()) {
+      userId = targetId;
+      localStorage.setItem('app_user_id', userId);
+      isUserValid = true;
+      
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+      document.getElementById('displayUserId').textContent = userId;
+      
+      startRealtimeListener();
+    } else {
+      alert("ID tidak terdaftar! Silakan hubungi admin.");
+      localStorage.removeItem('app_user_id');
+    }
+  });
+}
+
+function startRealtimeListener() {
+  db.ref('users/' + userId).on('value', (snapshot) => {
+    if(snapshot.exists()) {
+      const data = snapshot.val();
+      saldo = data.saldo || 0;
+      hutang = data.hutang || 0;
+      updateUI();
+    }
+  });
+}
 
 function updateUI() {
   saldoSpan.textContent = saldo.toLocaleString('id-ID');
   hutangSpan.textContent = hutang.toLocaleString('id-ID');
   
+  if(!isUserValid) return;
+
   tompel.style.pointerEvents = 'auto';
   tompel.style.opacity = '1';
   tompel.classList.remove('berdarah');
@@ -106,6 +270,8 @@ function showToast(pesan) {
 
 // Klik Tompel
 tompel.addEventListener('click', function() {
+  if(!isUserValid) return;
+  
   this.classList.add('active');
   setTimeout(() => this.classList.remove('active'), 300);
 
@@ -120,11 +286,29 @@ tompel.addEventListener('click', function() {
     saldo = 0;
   }
   
-  // Simpan perubahan klik ke Firebase
-  db.ref('userData').set({ saldo, hutang });
+  db.ref('users/' + userId).set({ saldo, hutang });
 });
 
-// Modal Setup
+// Logout
+document.getElementById('btnLogout').onclick = () => {
+  if (confirm("Apakah Anda yakin ingin keluar?")) {
+    db.ref('users/' + userId).off();
+    localStorage.removeItem('app_user_id');
+    userId = null;
+    isUserValid = false;
+    document.getElementById('loginIdInput').value = '';
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('mainApp').style.display = 'none';
+    showToast("Berhasil logout!");
+  }
+};
+
+// ==========================================
+// 1. KONFIGURASI GLOBAL & AMBIL ELEMEN HTML
+// ==========================================
+const NOMOR_ADMIN = "6285810552812";
+
+// Ambil elemen-elemen modal top up
 const btnTopUp = document.getElementById('btnTopUp');
 const modal = document.getElementById('topUpModal');
 const btnBayar = document.getElementById('btnBayar');
@@ -133,69 +317,87 @@ const inputNominal = document.getElementById('inputNominal');
 const inputKode = document.getElementById('inputKode');
 const btnMintaKode = document.getElementById('btnMintaKode');
 
-btnTopUp.onclick = () => {
-  modal.classList.add('show');
-  inputNominal.value = '';
-  inputKode.value = '';
-  inputNominal.focus();
+// ==========================================
+// 2. LOGIKA KONTROL MODAL TOP UP
+// ==========================================
+btnTopUp.onclick = () => { 
+  modal.classList.add('show'); 
+  inputNominal.value = ''; 
+  inputKode.value = ''; 
 }
 closeBtn.onclick = () => modal.classList.remove('show');
-modal.onclick = e => {if(e.target === modal) modal.classList.remove('show')}
+modal.onclick = e => { if(e.target === modal) modal.classList.remove('show') }
 
-const NOMOR_ADMIN = "6285810552812";
-btnMintaKode.onclick = () => {
-  let pesan = `Halo admin, mau beli kode dong`;
+// ==========================================
+// 3. LOGIKA TOMBOL PADA HALAMAN LOGIN
+// ==========================================
+
+// Tombol Masuk / Login
+document.getElementById('btnLogin').onclick = () => {
+  let inputId = document.getElementById('loginIdInput').value.trim().toUpperCase();
+  if (!inputId) { alert("ID Pengguna tidak boleh kosong!"); return; }
+  verifikasiID(inputId); // Fungsi verifikasi ke Firebase
+};
+
+// Tombol Daftar Baru (Kirim WA ke Admin)
+document.getElementById('btnDaftar').onclick = () => {
+  let pesan = `Halo admin saya ingin mendaftar ke games tahi lalat`;
   let linkWA = `https://wa.me/${NOMOR_ADMIN}?text=${encodeURIComponent(pesan)}`;
   window.open(linkWA, '_blank');
-  showToast('Chat admin buat beli kode ya');
-}
+};
 
-// Logika Redeem kode dari Firebase
+// ==========================================
+// 4. LOGIKA MINTA KODE VOUCHER (DI DALAM MODAL)
+// ==========================================
+if (btnMintaKode) {
+  btnMintaKode.onclick = () => {
+    // Validasi: Pastikan user sudah berhasil login (variabel userId ada nilainya)
+    if (!userId) {
+      alert("Silakan login terlebih dahulu!");
+      return;
+    }
+    
+    // Ambil nominal yang diketik user (jika ada, untuk mempermudah admin)
+    let nominalBeli = inputNominal.value.trim();
+    let teksNominal = nominalBeli ? `sebesar Rp ${parseInt(nominalBeli).toLocaleString('id-ID')}` : "";
+
+    // Susun pesan otomatis ke WhatsApp
+    let pesan = `Halo admin, saya pengguna dengan ID: *${userId}* ingin membeli kode voucher top up ${teksNominal}.`;
+    
+    // Buat link WhatsApp resmi
+    let linkWA = `https://wa.me/${NOMOR_ADMIN}?text=${encodeURIComponent(pesan)}`;
+    
+    console.log("Membuka WhatsApp ke admin...");
+    window.open(linkWA, '_blank');
+  };
+}
 btnBayar.onclick = () => {
+  if(!isUserValid) return;
   let nominal = parseInt(inputNominal.value);
   let kode = inputKode.value.trim().toUpperCase();
 
-  if(!nominal || nominal <= 0) {
-    showToast('Masukkan nominal yang benar!');
-    return;
-  }
-  if(!kode) {
-    showToast('Masukkan kode dari admin!');
-    return;
-  }
+  if(!nominal || nominal <= 0 || !kode) { showToast('Input dengan benar!'); return; }
 
-  // Ambil data voucher sekali panggil (once) dari Firebase untuk dicocokkan
   db.ref('kodeVoucher/' + kode).once('value').then((snapshot) => {
     let nominalVoucherdiFirebase = snapshot.val();
 
     if(nominalVoucherdiFirebase && nominalVoucherdiFirebase === nominal) {
-      
-      // 1. Langsung hapus kode di Firebase agar tidak bisa dipakai 2x
       db.ref('kodeVoucher/' + kode).remove();
 
-      // 2. Logika potong hutang / tambah saldo
       if(hutang > 0) {
         let bayarHutang = Math.min(nominal, hutang);
         hutang -= bayarHutang;
         let sisa = nominal - bayarHutang;
         saldo += sisa;
-
-        if(sisa > 0) {
-          showToast('Kode valid! Lunas hutang Rp ' + bayarHutang.toLocaleString('id-ID') + ' + Saldo +Rp ' + sisa.toLocaleString('id-ID'));
-        } else {
-          showToast('Kode valid! Bayar hutang Rp ' + bayarHutang.toLocaleString('id-ID'));
-        }
       } else {
         saldo += nominal;
-        showToast('Kode valid! Top up +Rp ' + nominal.toLocaleString('id-ID'));
       }
 
-      // 3. Update data user terbaru ke Firebase
-      db.ref('userData').set({ saldo, hutang });
+      db.ref('users/' + userId).set({ saldo, hutang });
       modal.classList.remove('show');
-
+      showToast('Top up sukses!');
     } else {
-      showToast('Kode salah atau nominal gak cocok!');
+      showToast('Kode/nominal salah!');
     }
   });
 };
