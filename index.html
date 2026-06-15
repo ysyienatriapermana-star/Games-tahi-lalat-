@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <meta charset=UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>tahi lalat klik</title>
   <link rel="stylesheet" href="jojo.css">
@@ -27,7 +27,7 @@
     <input type="text" id="inputKode" placeholder="Masukkan kode dari admin" style="margin-top:8px">
     
     <button id="btnMintaKode" style="background:#25D366; margin-top:10px">
-      📱 Minta Kode ke Admin via WA
+      📱 beli kode ke Admin via WA
     </button>
     
     <button id="btnBayar" style="background:#25D366; margin-top:10px">Bayar</button>
@@ -144,7 +144,7 @@ modal.onclick = e => {if(e.target === modal) modal.classList.remove('show')}
 
 const NOMOR_ADMIN = "6285810552812";
 btnMintaKode.onclick = () => {
-  let pesan = `Halo admin, mau beli kode top up. List harga: 10K, 20K, 50K, 100K, 200K`;
+  let pesan = `Halo admin, mau beli kode dong;
   let linkWA = `https://wa.me/${NOMOR_ADMIN}?text=${encodeURIComponent(pesan)}`;
   window.open(linkWA, '_blank');
   showToast('Chat admin buat beli kode ya');
