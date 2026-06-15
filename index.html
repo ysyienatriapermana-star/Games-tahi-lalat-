@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="CONTENT-TYPE" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>tahi lalat klik</title>
+  <link rel="stylesheet" href="jojo.css">
+</head>
+<body>
+ <div class="uang">
+  Saldo: Rp <span id="saldo">0</span> <button id="btnTopUp" style="width:auto; padding:2px 10px; margin:0">+</button><br>
+  Hutang: Rp <span id="hutang">0</span>
+ </div>
+
+ <div class="jojo">
+  <div class="tompel"></div>
+  <img src="bunga.png" width="411" alt="Bunga">
+ </div>
+
+ <div id="toast" class="toast"></div>
+
+ <div id="topUpModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Top Up Saldo</h3>
+    <input type="number" id="inputNominal" placeholder="Masukkan nominal">
+    <input type="text" id="inputKode" placeholder="Masukkan kode dari admin" style="margin-top:8px">
+    
+    <button id="btnMintaKode" style="background:#25D366; margin-top:10px">
+      📱 Minta Kode ke Admin via WA
+    </button>
+    
+    <button id="btnBayar" style="background:#25D366; margin-top:10px">Bayar</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+// ⚠️ GANTI DENGAN KONFIGURASI FIREBASE ANDA SENDIRI
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDasO8TzkeiWOPoa-3U3yzdprkYGogf9nk",
+  authDomain: "my-project-8f3a3.firebaseapp.com",
+  databaseURL: "https://my-project-8f3a3-default-rtdb.firebaseio.com",
+  projectId: "my-project-8f3a3",
+  storageBucket: "my-project-8f3a3.firebasestorage.app",
+  messagingSenderId: "208946886241",
+  appId: "1:208946886241:web:74c100e4f377a1d4411c20",
+  measurementId: "G-J51CC70B6M"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let saldo = 0;
+let hutang = 0;
+const saldoSpan = document.getElementById('saldo');
+const hutangSpan = document.getElementById('hutang');
+const tompel = document.querySelector('.tompel');
+const toast = document.getElementById('toast');
+
+let udahToastBerdarah = false;
+
+// Ambil data Saldo & Hutang user dari Firebase secara real-time
+db.ref('userData').on('value', (snapshot) => {
+  const data = snapshot.val() || { saldo: 0, hutang: 0 };
+  saldo = data.saldo;
+  hutang = data.hutang;
+  updateUI();
+});
+
+function updateUI() {
+  saldoSpan.textContent = saldo.toLocaleString('id-ID');
+  hutangSpan.textContent = hutang.toLocaleString('id-ID');
+  
+  tompel.style.pointerEvents = 'auto';
+  tompel.style.opacity = '1';
+  tompel.classList.remove('berdarah');
+
+  if (hutang >= 110000) {
+    tompel.style.pointerEvents = 'none';
+    tompel.style.opacity = '0.7';
+    tompel.classList.add('berdarah');
+    
+    if (!udahToastBerdarah) {
+      showToast('Tompel udah berdarah! Top up dulu');
+      udahToastBerdarah = true;
+    }
+  } 
+  else if (hutang >= 50000) {
+    showToast('Peringatan! Hutang udah Rp ' + hutang.toLocaleString('id-ID'));
+    udahToastBerdarah = false; 
+  }
+  else {
+    udahToastBerdarah = false; 
+  }
+}
+
+function showToast(pesan) {
+  toast.textContent = pesan;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// Klik Tompel
+tompel.addEventListener('click', function() {
+  this.classList.add('active');
+  setTimeout(() => this.classList.remove('active'), 300);
+
+  let biaya = 5000;
+  if (hutang >= 110000) return;
+
+  if (saldo >= biaya) {
+    saldo -= biaya;
+  } else {
+    let kurang = biaya - saldo; 
+    hutang += kurang;
+    saldo = 0;
+  }
+  
+  // Simpan perubahan klik ke Firebase
+  db.ref('userData').set({ saldo, hutang });
+});
+
+// Modal Setup
+const btnTopUp = document.getElementById('btnTopUp');
+const modal = document.getElementById('topUpModal');
+const btnBayar = document.getElementById('btnBayar');
+const closeBtn = document.querySelector('.close');
+const inputNominal = document.getElementById('inputNominal');
+const inputKode = document.getElementById('inputKode');
+const btnMintaKode = document.getElementById('btnMintaKode');
+
+btnTopUp.onclick = () => {
+  modal.classList.add('show');
+  inputNominal.value = '';
+  inputKode.value = '';
+  inputNominal.focus();
+}
+closeBtn.onclick = () => modal.classList.remove('show');
+modal.onclick = e => {if(e.target === modal) modal.classList.remove('show')}
+
+const NOMOR_ADMIN = "6285810552812";
+btnMintaKode.onclick = () => {
+  let pesan = `Halo admin, mau beli kode top up. List harga: 10K, 20K, 50K, 100K, 200K`;
+  let linkWA = `https://wa.me/${NOMOR_ADMIN}?text=${encodeURIComponent(pesan)}`;
+  window.open(linkWA, '_blank');
+  showToast('Chat admin buat beli kode ya');
+}
+
+// Logika Redeem kode dari Firebase
+btnBayar.onclick = () => {
+  let nominal = parseInt(inputNominal.value);
+  let kode = inputKode.value.trim().toUpperCase();
+
+  if(!nominal || nominal <= 0) {
+    showToast('Masukkan nominal yang benar!');
+    return;
+  }
+  if(!kode) {
+    showToast('Masukkan kode dari admin!');
+    return;
+  }
+
+  // Ambil data voucher sekali panggil (once) dari Firebase untuk dicocokkan
+  db.ref('kodeVoucher/' + kode).once('value').then((snapshot) => {
+    let nominalVoucherdiFirebase = snapshot.val();
+
+    if(nominalVoucherdiFirebase && nominalVoucherdiFirebase === nominal) {
+      
+      // 1. Langsung hapus kode di Firebase agar tidak bisa dipakai 2x
+      db.ref('kodeVoucher/' + kode).remove();
+
+      // 2. Logika potong hutang / tambah saldo
+      if(hutang > 0) {
+        let bayarHutang = Math.min(nominal, hutang);
+        hutang -= bayarHutang;
+        let sisa = nominal - bayarHutang;
+        saldo += sisa;
+
+        if(sisa > 0) {
+          showToast('Kode valid! Lunas hutang Rp ' + bayarHutang.toLocaleString('id-ID') + ' + Saldo +Rp ' + sisa.toLocaleString('id-ID'));
+        } else {
+          showToast('Kode valid! Bayar hutang Rp ' + bayarHutang.toLocaleString('id-ID'));
+        }
+      } else {
+        saldo += nominal;
+        showToast('Kode valid! Top up +Rp ' + nominal.toLocaleString('id-ID'));
+      }
+
+      // 3. Update data user terbaru ke Firebase
+      db.ref('userData').set({ saldo, hutang });
+      modal.classList.remove('show');
+
+    } else {
+      showToast('Kode salah atau nominal gak cocok!');
+    }
+  });
+};
+</script>
+</body>
+</html>
