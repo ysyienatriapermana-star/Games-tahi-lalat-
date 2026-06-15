@@ -144,7 +144,7 @@ modal.onclick = e => {if(e.target === modal) modal.classList.remove('show')}
 
 const NOMOR_ADMIN = "6285810552812";
 btnMintaKode.onclick = () => {
-  let pesan = `Halo admin, mau beli kode dong';
+  let pesan = `Halo admin, mau beli kode dong`;
   let linkWA = `https://wa.me/${NOMOR_ADMIN}?text=${encodeURIComponent(pesan)}`;
   window.open(linkWA, '_blank');
   showToast('Chat admin buat beli kode ya');
