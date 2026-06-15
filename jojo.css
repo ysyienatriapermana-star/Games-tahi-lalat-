@@ -8,12 +8,12 @@ body{font-family:arial;}
 }
 
 .tompel{
-  background-color:red; /* awal invisible */
+  background-color:rgba(0); /* awal invisible */
   height:26px;
   width:26px;
   position:absolute;
   left: 236px; /* tengah horizontal */
-  top: 246px; /* tengah vertikal */
+  top: 316px; /* tengah vertikal */
   transform: translate(-50%, -50%); /* geser biar titik tengahnya pas */
   border-radius:50%;
   transition: background 0.3s ease;
