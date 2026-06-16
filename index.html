@@ -150,7 +150,7 @@
     <button id="btnLogout" style="width:auto; padding:4px 10px; background:red; margin:0; float:right; font-size:12px;">Logout</button>
     ID: <b id="displayUserId" style="color: #0af;">-</b> 
     <div style="clear:both;"></div>
-    
+     <button onclick="window.location.href='clim.html'">widraw</button>
     <hr style="border:0; border-top:1px solid #444; margin:10px 0;">
     
     Saldo: Rp <span id="saldo">0</span> <button id="btnTopUp" style="width:auto; padding:4px 12px; margin:0; display:inline-block; margin-left:10px;">+</button><br>
@@ -297,26 +297,60 @@ function showToast(pesan) {
 }
 
 // Klik Tompel
-tompel.addEventListener('click', function() {
-  if(!isUserValid) return;
+// --- Fungsi Transaksi Utama ---
+function prosesTransaksi(biaya) {
+  if (!isUserValid) return;
   
-  this.classList.add('active');
-  setTimeout(() => this.classList.remove('active'), 300);
+  // 1. Cek batas hutang
+  if (hutang >= 110000) {
+    showToast('Tompel sudah berdarah! Top up dulu.');
+    return;
+  }
 
-  let biaya = 5000;
-  if (hutang >= 110000) return;
+  // 2. Hitung saldo dan hutang
+  if (saldo >= biaya) {
+    saldo -= biaya;
+  } else {
+    let kurang = biaya - saldo;
+    hutang += kurang;
+    saldo = 0;
+  }
 
-  // Di dalam event listener klik tompel
-if (saldo >= biaya) {
-  saldo -= biaya;
-} else {
-  let kurang = biaya - saldo; 
-  hutang += kurang;
-  saldo = 0;
+  // 3. Logika Koin Cinta: Hanya dapat jika hutang = 0
+  let koinBaru = 0;
+  if (hutang === 0) {
+    // 30% peluang dapat 10 koin
+    koinBaru = (Math.random() < 0.3) ? 10 : 0; 
+  }
+  
+  // 4. Update ke Firebase
+  let updateData = { 
+    saldo: saldo, 
+    hutang: hutang 
+  };
+
+  // Hanya tambahkan koin ke updateData jika koinBaru > 0
+  if (koinBaru > 0) {
+    updateData.koin_cinta = firebase.database.ServerValue.increment(koinBaru);
+  }
+  
+  db.ref('users/' + userId).update(updateData);
+  
+  if(koinBaru > 0) {
+    showToast('Selamat! Dapat ' + koinBaru + ' Koin Cinta!');
+  }
 }
 
-// Gunakan update agar data lain tidak terhapus
-db.ref('users/' + userId).update({ saldo, hutang });
+// --- Integrasi Semua Interaksi pada Tompel ---
+
+let timer;
+let touchstartX = 0;
+
+// 1. Klik Biasa (5.000)
+tompel.addEventListener('click', () => {
+    tompel.classList.add('active');
+    setTimeout(() => tompel.classList.remove('active'), 300);
+    prosesTransaksi(5000);
 });
 
 // Logout

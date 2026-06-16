@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Klaim Koin Cinta</title>
+  <style>
+    body { background: #111; color: white; padding: 20px; font-family: sans-serif; text-align: center; }
+    .card { background: #222; padding: 20px; border-radius: 10px; }
+  button{
+  background-color:#0af;
+  width: auto;
+  padding: 5px 10px;
+  font-size: 12px;
+  border:none;
+  color:white;
+  border-radius:10px;
+  }
+  </style>
+</head>
+<body>
+  <div class="card">
+  <h2>Klaim Koin Cinta</h2>
+  <p>Koin Kamu: <b id="koinDisplay">0</b></p>
+  
+  <select id="pilihanNominal" style="width:100%; padding:10px; margin-bottom:10px;">
+    <option value="100">10rb (100 Koin)</option>
+    <option value="200">20rb (200 Koin)</option>
+    <option value="500">50rb (500 Koin)</option>
+    <option value="1000">100rb (1000 Koin)</option>
+  </select>
+  
+  <button onclick="klaimSaldo()">Tukar Koin</button>
+  
+  <hr style="margin: 20px 0;">
+    <button onclick="window.location.href='index.html'">balik</button>
+</div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+  <script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyDasO8TzkeiWOPoa-3U3yzdprkYGogf9nk",
+  authDomain: "my-project-8f3a3.firebaseapp.com",
+  databaseURL: "https://my-project-8f3a3-default-rtdb.firebaseio.com",
+  projectId: "my-project-8f3a3",
+  storageBucket: "my-project-8f3a3.firebasestorage.app",
+  messagingSenderId: "208946886241",
+  appId: "1:208946886241:web:74c100e4f377a1d4411c20",
+  measurementId: "G-J51CC70B6M"
+};
+    // Inisialisasi Firebase & cek user (sama seperti di index)
+  // Inisialisasi Firebase
+firebase.initializeApp(firebaseConfig);
+const userId = localStorage.getItem('app_user_id');
+const db = firebase.database();
+const koinDisplay = document.getElementById('koinDisplay');
+
+// 1. Ambil data koin secara real-time
+if (userId) {
+    db.ref('users/' + userId).on('value', (snapshot) => {
+        const data = snapshot.val();
+        const koin = data.koin_cinta || 0;
+        koinDisplay.textContent = koin;
+    });
+} else {
+    alert("Silakan login terlebih dahulu!");
+    window.location.href = 'index.html';
+}
+
+// 2. Fungsi Klaim Saldo
+// Fungsi Klaim Saldo (Berdasarkan Pilihan)
+function klaimSaldo() {
+    const koinDibutuhkan = parseInt(document.getElementById('pilihanNominal').value);
+    const nominalUang = koinDibutuhkan * 100; // 100 koin = 10.000
+
+    db.ref('users/' + userId).once('value', (snapshot) => {
+        const data = snapshot.val();
+        const koinSaatIni = data.koin_cinta || 0;
+
+        if (koinSaatIni >= koinDibutuhkan) {
+            db.ref('users/' + userId).update({
+                koin_cinta: koinSaatIni - koinDibutuhkan,
+                saldo: (data.saldo || 0) + nominalUang
+            }).then(() => alert("Berhasil! Saldo bertambah Rp " + nominalUang.toLocaleString()));
+        } else {
+            alert("Koin tidak cukup!");
+        }
+    });
+}
+
+  </script>
+</body>
+</html>
