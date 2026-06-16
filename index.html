@@ -113,6 +113,16 @@
     /* Toast Notifikasi */
     .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#333; padding:10px 20px; border-radius:6px; display:none; z-index:99; width: 90%; max-width: 300px; text-align: center; }
     .toast.show { display:block; }
+  .karakter-selector {
+  margin: 15px 0;
+  text-align: center;
+}
+.karakter-selector button {
+  width: auto;
+  padding: 5px 10px;
+  margin: 5px;
+  font-size: 12px;
+}
   </style>
 </head>
 <body>
@@ -130,6 +140,12 @@
  </div>
 
  <div id="mainApp" class="main-app">
+   <!-- Tambahkan ini di dalam .main-app -->
+<div class="karakter-selector">
+  <p>Pilih Karakter:</p>
+  <button onclick="gantiKarakter('bunga.png', '204px', '226px')">Bunga</button>
+<button onclick="gantiKarakter('elisa.png', '206px', '238px')">Elisa</button>
+</div>
    <div class="uang">
     <button id="btnLogout" style="width:auto; padding:4px 10px; background:red; margin:0; float:right; font-size:12px;">Logout</button>
     ID: <b id="displayUserId" style="color: #0af;">-</b> 
@@ -183,7 +199,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 let userId = localStorage.getItem('app_user_id');
-let saldo = 0;
+let saldo =0;
 let hutang = 0;
 let isUserValid = false;
 
@@ -226,13 +242,25 @@ function startRealtimeListener() {
   db.ref('users/' + userId).on('value', (snapshot) => {
     if(snapshot.exists()) {
       const data = snapshot.val();
+      
+      // Update gambar
+      if (data.karakter) {
+        document.querySelector('.jojo img').src = data.karakter;
+      }
+      
+      // Update posisi tompel jika ada data koordinat
+      if (data.top && data.left) {
+        const tompel = document.querySelector('.tompel');
+        tompel.style.top = data.top;
+        tompel.style.left = data.left;
+      }
+      
       saldo = data.saldo || 0;
       hutang = data.hutang || 0;
       updateUI();
     }
   });
 }
-
 function updateUI() {
   saldoSpan.textContent = saldo.toLocaleString('id-ID');
   hutangSpan.textContent = hutang.toLocaleString('id-ID');
@@ -278,15 +306,17 @@ tompel.addEventListener('click', function() {
   let biaya = 5000;
   if (hutang >= 110000) return;
 
-  if (saldo >= biaya) {
-    saldo -= biaya;
-  } else {
-    let kurang = biaya - saldo; 
-    hutang += kurang;
-    saldo = 0;
-  }
-  
-  db.ref('users/' + userId).set({ saldo, hutang });
+  // Di dalam event listener klik tompel
+if (saldo >= biaya) {
+  saldo -= biaya;
+} else {
+  let kurang = biaya - saldo; 
+  hutang += kurang;
+  saldo = 0;
+}
+
+// Gunakan update agar data lain tidak terhapus
+db.ref('users/' + userId).update({ saldo, hutang });
 });
 
 // Logout
@@ -393,7 +423,8 @@ btnBayar.onclick = () => {
         saldo += nominal;
       }
 
-      db.ref('users/' + userId).set({ saldo, hutang });
+   // Di dalam btnBayar, ubah baris ini:
+      db.ref('users/' + userId).update({ saldo, hutang });
       modal.classList.remove('show');
       showToast('Top up sukses!');
     } else {
@@ -401,6 +432,22 @@ btnBayar.onclick = () => {
     }
   });
 };
+  function gantiKarakter(namaFile, top, left) {
+  // Simpan karakter dan koordinat ke Firebase
+  db.ref('users/' + userId).update({ 
+    karakter: namaFile,
+    top: top,
+    left: left
+  });
+  
+  // Update tampilan langsung
+  document.querySelector('.jojo img').src = namaFile;
+  const tompel = document.querySelector('.tompel');
+  tompel.style.top = top;
+  tompel.style.left = left;
+  
+  showToast('Karakter & posisi tompel diubah!');
+}
 </script>
 </body>
 </html>
